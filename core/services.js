@@ -1,6 +1,10 @@
 const path = require('path');
 const fs = require('fs');
 const querystring = require('querystring');
+const EventEmitter = require('events');
+const { view } = require('./helpers');
+
+const chatEmitter = new EventEmitter();
 
 exports.respondText = function ( req, res ) {
 	res.setHeader('Content-Type', 'text/plain');
@@ -8,8 +12,7 @@ exports.respondText = function ( req, res ) {
 }
 
 exports.respondJson = function ( req, res ) {
-	res.setHeader('Content-Type', 'application/json');
-	res.end(JSON.stringify({ text: 'hi', numbers: [1, 2, 3, 4] }));
+	res.json({ text: 'hi', numbers: [1, 2, 3] });
 }
 
 function respondNotFound( req, res ) {
@@ -40,4 +43,31 @@ exports.respondStatic = function ( req, res ) {
   	fs.createReadStream(filename + req.url)
     	.on('error', () => respondNotFound({req, res}))
     	.pipe(res);
+}
+
+exports.respondChat = function ( req, res ) {
+	const { message } = req.query;
+
+	chatEmitter.emit('message', message);
+	res.end();
+}
+
+exports.respondSSE = function ( req, res ) {
+	res.writeHead(200, {
+		'Content-Type': 'text/event-stream',
+		'Connection': 'keep-alive'
+	});
+
+	const onMessage = msg => res.write(`data: ${msg}\n\n`);
+
+	chatEmitter.on('message', onMessage);
+
+	res.on('close', () => {
+		chatEmitter.off('message', onMessage);
+	});
+}
+
+exports.respondSala = function ( req, res ) {
+	res.setHeader('Content-Type', 'text/html');
+	res.end(view('sala'));	
 }

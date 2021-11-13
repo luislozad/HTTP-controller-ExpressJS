@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 
-const FILE_VIEW_MAIN = 'index.html';
 const VIEW_DEFAULT = '<html></html>';
 
 function view( name ) {
@@ -13,11 +12,31 @@ function view( name ) {
 		throw new Error('A string is expected');
 	}
 
-	const root = path.resolve(__dirname, '../view', name.toLowerCase());
+	if (name.includes('.') && !name.includes('/')) {
+		const { paths, file } = parsePaths(name);
+		const root = path.resolve(__dirname, '../view', ...paths);
 
-	const html = fs.readFileSync(root + '/' + FILE_VIEW_MAIN);
+		return getFileHTML(root, file);
+	} else {
+		const root = path.resolve(__dirname, '../view');
 
-	return html ? html : VIEW_DEFAULT;
+		return getFileHTML(root, name);	
+	}
+}
+
+function getFileHTML(root, file) {
+	const html = fs.readFileSync(root + '/' + file + '.html');
+
+	return html ? html : VIEW_DEFAULT;		
+}
+
+function parsePaths( str ) {
+	const _paths = str.split('.');
+
+	return {
+		paths: _paths.filter((_, i) => i < _paths.length - 1),
+		file: _paths[_paths.length - 1]
+	};
 }
 
 module.exports = {

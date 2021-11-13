@@ -69,5 +69,5 @@ exports.respondSSE = function ( req, res ) {
 
 exports.respondSala = function ( req, res ) {
 	res.setHeader('Content-Type', 'text/html');
-	res.end(view('sala'));	
+	res.end(view('sala.index'));	
 }

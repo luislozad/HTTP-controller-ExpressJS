@@ -12,7 +12,11 @@ function view( name ) {
 		throw new Error('A string is expected');
 	}
 
-	if (name.includes('.') && !name.includes('/')) {
+	if (name.includes('/')) {
+		throw new Error('No slash allowed in the view name format');
+	}
+
+	if (name.includes('.')) {
 		const { paths, file } = parsePaths(name);
 		const root = path.resolve(__dirname, '../view', ...paths);
 
@@ -32,10 +36,11 @@ function getFileHTML(root, file) {
 
 function parsePaths( str ) {
 	const _paths = str.split('.');
+	const max = _paths.length - 1;
 
 	return {
-		paths: _paths.filter((_, i) => i < _paths.length - 1),
-		file: _paths[_paths.length - 1]
+		paths: _paths.slice(0, max),
+		file: _paths[max]
 	};
 }
 
